@@ -231,3 +231,23 @@ test("the project code has no comments", () => {
     assert.doesNotMatch(content, patterns[path.extname(file)], `${file} contains a comment`);
   }
 });
+
+test("red text is easy to read on the dark background", () => {
+  const css = fs.readFileSync(path.join(root, "style", "style.css"), "utf8");
+  const variable = (name) => css.match(new RegExp(`--${name}: (#[0-9a-f]{6});`, "i"))[1];
+  const luminance = (hex) => {
+    const [r, g, b] = hex.slice(1).match(/../g).map((h) => parseInt(h, 16) / 255).map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  };
+  const contrast = (a, b) => {
+    const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+    return (hi + 0.05) / (lo + 0.05);
+  };
+  for (const text of ["text-red", "text-red-soft"]) {
+    for (const bg of ["bg-dark", "bg-secondary", "bg-tertiary"]) {
+      assert.ok(contrast(variable(text), variable(bg)) >= 7, `--${text} on --${bg} is too low contrast`);
+    }
+  }
+  const textRules = [...css.matchAll(/([^{}]+)\{[^}]*?\n  color: var\(--accent-(primary|red)\);/g)].map((m) => m[1].trim());
+  assert.deepEqual(textRules, [], `these rules still use dark red for text: ${textRules.join(", ")}`);
+});
