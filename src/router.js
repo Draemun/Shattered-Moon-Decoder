@@ -1,6 +1,5 @@
 (function () {
   const pages = document.querySelectorAll(".page");
-  const navLinks = document.querySelectorAll(".nav-link");
 
   function resolve(route) {
     if (route !== "cipher" && document.getElementById("page-" + route)) return route;
@@ -9,24 +8,21 @@
     return null;
   }
 
-  function go(route) {
+  function render() {
+    let route = decodeURIComponent(location.hash.slice(1)) || "home";
     let page = resolve(route);
     if (!page) {
       route = "home";
       page = "home";
+      history.replaceState(null, "", "#home");
     }
     pages.forEach((section) => {
       section.hidden = section.id !== "page-" + page;
     });
-    navLinks.forEach((link) => {
-      link.classList.toggle("active", link.dataset.page === route);
-    });
-    if (location.hash !== "#" + route) history.replaceState(null, "", "#" + route);
+    Menu.setActive(route);
+    window.scrollTo(0, 0);
   }
 
-  document.querySelectorAll("[data-page]").forEach((button) => {
-    button.addEventListener("click", () => go(button.dataset.page));
-  });
-
-  go(location.hash.slice(1));
+  window.addEventListener("hashchange", render);
+  render();
 })();
