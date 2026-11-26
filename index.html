@@ -50,6 +50,14 @@
   </div>
   <div id="backdrop" hidden></div>
 
+  <div class="search-container" id="search">
+    <button class="search-icon" id="search-toggle" type="button" aria-label="Search" aria-expanded="false" aria-controls="search-box">🔎︎</button>
+    <div class="search-box" id="search-box" hidden>
+      <input id="search-input" type="search" placeholder="Search decoders and encoders..." autocomplete="off" aria-label="Search decoders and encoders" aria-controls="search-results">
+      <ul class="search-results" id="search-results" hidden></ul>
+    </div>
+  </div>
+
   <main id="app">
     <section id="page-home" class="page">
       <h1>Shattered Moon Decoder</h1>
@@ -154,7 +162,10 @@
   <script src="src/ciphers/morse.js"></script>
   <script src="src/ciphers/base64.js"></script>
   <script src="src/answers.js"></script>
+  <script src="src/catalog.js"></script>
+  <script src="src/search.js"></script>
   <script src="src/menu.js"></script>
+  <script src="src/search-ui.js"></script>
   <script src="src/cipher-page.js"></script>
   <script src="src/verify.js"></script>
   <script src="src/router.js"></script>

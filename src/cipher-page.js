@@ -22,7 +22,6 @@
 
   const methods = {
     caesar: {
-      name: "Caesar",
       decode: {
         label: "Encoded text",
         fields: ["caesar-mode", "shift"],
@@ -38,12 +37,10 @@
       },
     },
     vigenere: {
-      name: "Vigenère",
       decode: { label: "Encoded text", fields: ["key"], run: (text) => Ciphers.vigenere.decode(text, keyInput.value) },
       encode: { label: "Text", fields: ["key"], run: (text) => Ciphers.vigenere.encode(text, keyInput.value) },
     },
     brainfuck: {
-      name: "Brainfuck",
       decode: {
         label: "Brainfuck program",
         fields: ["program-input"],
@@ -52,17 +49,14 @@
       encode: { label: "Text", fields: [], run: (text) => Ciphers.brainfuck.encode(text) },
     },
     binary: {
-      name: "Binary",
       decode: { label: "Binary", fields: [], run: (text) => Ciphers.binary.decode(text) },
       encode: { label: "Text", fields: [], run: (text) => Ciphers.binary.encode(text) },
     },
     morse: {
-      name: "Morse",
       decode: { label: "Morse code", fields: [], run: (text) => Ciphers.morse.decode(text) },
       encode: { label: "Text", fields: [], run: (text) => Ciphers.morse.encode(text) },
     },
     base64: {
-      name: "Base64",
       decode: { label: "Base64", fields: [], run: (text) => Ciphers.base64.decode(text) },
       encode: { label: "Text", fields: [], run: (text) => Ciphers.base64.encode(text) },
     },
@@ -117,7 +111,7 @@
     current = { mode, method, config: entry[mode] };
 
     const verb = mode === "decode" ? "Decode" : "Encode";
-    title.textContent = `${verb}: ${entry.name}`;
+    title.textContent = `${verb}: ${Catalog.cipher(method).name}`;
     textLabel.textContent = current.config.label;
     shiftLabel.textContent = mode === "decode" ? "Decoding shift" : "Encoding shift";
     submitButton.textContent = verb;

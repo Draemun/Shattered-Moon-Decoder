@@ -107,7 +107,7 @@ test("every field the cipher page uses exists in index.html", () => {
 });
 
 test("every element the page scripts use exists in index.html", () => {
-  for (const file of ["verify.js", "menu.js", "cipher-page.js"]) {
+  for (const file of ["verify.js", "menu.js", "cipher-page.js", "search-ui.js"]) {
     const code = fs.readFileSync(path.join(root, "src", file), "utf8");
     for (const id of [...code.matchAll(/getElementById\("([^"]+)"\)/g)].map((m) => m[1])) {
       assert.ok(html.includes(`id="${id}"`), `#${id} used by ${file} is missing`);

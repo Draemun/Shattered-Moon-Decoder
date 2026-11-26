@@ -9,8 +9,15 @@ const files = [
   "ciphers/morse.js",
   "ciphers/base64.js",
   "answers.js",
+  "catalog.js",
+  "search.js",
 ];
 
 for (const file of files) require(path.join(__dirname, "..", "src", file));
 
-module.exports = { Ciphers: globalThis.Ciphers, Answers: globalThis.Answers };
+module.exports = {
+  Ciphers: globalThis.Ciphers,
+  Answers: globalThis.Answers,
+  Catalog: globalThis.Catalog,
+  Search: globalThis.Search,
+};
