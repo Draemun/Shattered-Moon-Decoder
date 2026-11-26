@@ -2,20 +2,31 @@
   const pages = document.querySelectorAll(".page");
   const navLinks = document.querySelectorAll(".nav-link");
 
-  function showPage(name) {
-    pages.forEach((page) => {
-      page.hidden = page.id !== "page-" + name;
+  function resolve(route) {
+    if (route !== "cipher" && document.getElementById("page-" + route)) return route;
+    const match = route.match(/^(decode|encode)\/(\w+)$/);
+    if (match && CipherPage.open(match[1], match[2])) return "cipher";
+    return null;
+  }
+
+  function go(route) {
+    let page = resolve(route);
+    if (!page) {
+      route = "home";
+      page = "home";
+    }
+    pages.forEach((section) => {
+      section.hidden = section.id !== "page-" + page;
     });
     navLinks.forEach((link) => {
-      link.classList.toggle("active", link.dataset.page === name);
+      link.classList.toggle("active", link.dataset.page === route);
     });
-    if (location.hash !== "#" + name) history.replaceState(null, "", "#" + name);
+    if (location.hash !== "#" + route) history.replaceState(null, "", "#" + route);
   }
 
   document.querySelectorAll("[data-page]").forEach((button) => {
-    button.addEventListener("click", () => showPage(button.dataset.page));
+    button.addEventListener("click", () => go(button.dataset.page));
   });
 
-  const start = location.hash.slice(1);
-  showPage(document.getElementById("page-" + start) ? start : "home");
+  go(location.hash.slice(1));
 })();
