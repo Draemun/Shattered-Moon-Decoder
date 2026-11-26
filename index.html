@@ -2,11 +2,17 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Shattered Moon Decoder</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+  <title>PMD ~ Shattered Moon Decoder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Crete+Round:ital@0;1&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style/style.css">
 </head>
 <body>
+  <div class="stars" aria-hidden="true"></div>
+  <div class="moon-crack" aria-hidden="true"></div>
+
   <div class="burger-menu" id="burger-menu">
     <button class="burger-icon" id="menu-toggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="sidebar">
       <span></span>
@@ -20,31 +26,17 @@
       <div class="submenu">
         <div class="submenu-header">
           <a href="#decode" data-page="decode">Decode</a>
-          <button class="submenu-toggle" type="button" aria-expanded="false" aria-controls="submenu-decode" aria-label="Show decode ciphers">&gt;</button>
+          <button class="submenu-toggle" type="button" aria-expanded="false" aria-controls="submenu-decode" aria-label="Show decoders"><span class="submenu-arrow" aria-hidden="true">&gt;</span></button>
         </div>
-        <div class="submenu-items" id="submenu-decode" hidden>
-          <a href="#decode/caesar" data-page="decode/caesar">Caesar</a>
-          <a href="#decode/vigenere" data-page="decode/vigenere">Vigenère</a>
-          <a href="#decode/brainfuck" data-page="decode/brainfuck">Brainfuck</a>
-          <a href="#decode/binary" data-page="decode/binary">Binary</a>
-          <a href="#decode/morse" data-page="decode/morse">Morse</a>
-          <a href="#decode/base64" data-page="decode/base64">Base64</a>
-        </div>
+        <div class="submenu-items" id="submenu-decode" data-menu="decode" hidden></div>
       </div>
 
       <div class="submenu">
         <div class="submenu-header">
           <a href="#encode" data-page="encode">Encode</a>
-          <button class="submenu-toggle" type="button" aria-expanded="false" aria-controls="submenu-encode" aria-label="Show encode ciphers">&gt;</button>
+          <button class="submenu-toggle" type="button" aria-expanded="false" aria-controls="submenu-encode" aria-label="Show encoders"><span class="submenu-arrow" aria-hidden="true">&gt;</span></button>
         </div>
-        <div class="submenu-items" id="submenu-encode" hidden>
-          <a href="#encode/caesar" data-page="encode/caesar">Caesar</a>
-          <a href="#encode/vigenere" data-page="encode/vigenere">Vigenère</a>
-          <a href="#encode/brainfuck" data-page="encode/brainfuck">Brainfuck</a>
-          <a href="#encode/binary" data-page="encode/binary">Binary</a>
-          <a href="#encode/morse" data-page="encode/morse">Morse</a>
-          <a href="#encode/base64" data-page="encode/base64">Base64</a>
-        </div>
+        <div class="submenu-items" id="submenu-encode" data-menu="encode" hidden></div>
       </div>
     </nav>
   </div>
@@ -53,117 +45,155 @@
   <div class="search-container" id="search">
     <button class="search-icon" id="search-toggle" type="button" aria-label="Search" aria-expanded="false" aria-controls="search-box">🔎︎</button>
     <div class="search-box" id="search-box" hidden>
-      <input id="search-input" type="search" placeholder="Search decoders and encoders..." autocomplete="off" aria-label="Search decoders and encoders" aria-controls="search-results">
+      <input id="search-input" type="search" placeholder="Search..." autocomplete="off" aria-label="Search decoders and encoders" aria-controls="search-results">
       <ul class="search-results" id="search-results" hidden></ul>
     </div>
   </div>
 
   <main id="app">
-    <section id="page-home" class="page">
-      <h1>Shattered Moon Decoder</h1>
-      <h2>What do you want to do?</h2>
-      <div class="choices">
-        <a class="choice" href="#verify">Server Verification</a>
-        <a class="choice" href="#decode">Decode</a>
-      </div>
+    <section id="page-home" class="page container">
+      <header class="hero">
+        <div class="glitch-container">
+          <h1 class="glitch" data-text="PMD ~ SHATTERED MOON">PMD ~ SHATTERED MOON</h1>
+        </div>
+        <p class="hero-subtitle">Decoder</p>
+      </header>
+
+      <section class="warning-section">
+        <h2 class="warning-title">What do you want to do?</h2>
+        <div class="home-buttons">
+          <a class="btn-primary btn-big" href="#verify">Server Verification</a>
+          <a class="btn-primary btn-big" href="#decode">Decode</a>
+        </div>
+      </section>
     </section>
 
-    <section id="page-verify" class="page" hidden>
-      <h2>Server Verification</h2>
-      <form id="verify-form">
-        <label for="verify-text">Encoded text</label>
-        <input id="verify-text" type="text" autocomplete="off" required>
+    <section id="page-verify" class="page container" hidden>
+      <section class="lore-content-section narrow">
+        <h1>Server Verification</h1>
+        <p class="section-intro">Enter the encoded text and its shift. Upper or lower case doesn't matter.</p>
+        <form id="verify-form">
+          <div class="faction-group-label">Input</div>
+          <div class="field">
+            <label for="verify-text">Encoded text</label>
+            <input id="verify-text" type="text" autocomplete="off" required>
+          </div>
+          <div class="field">
+            <label for="verify-shift">Decoding shift</label>
+            <input id="verify-shift" type="text" autocomplete="off" required>
+          </div>
+          <div class="form-actions">
+            <button class="btn-primary" type="submit">Verify</button>
+          </div>
+        </form>
+        <div id="verify-result" class="result" role="status" aria-live="polite"></div>
+      </section>
 
-        <label for="verify-shift">Decoding shift</label>
-        <input id="verify-shift" type="text" inputmode="numeric" autocomplete="off" required>
-
-        <button type="submit">Verify</button>
-      </form>
-      <div id="verify-result" class="result" role="status" aria-live="polite"></div>
-
-      <dialog id="verify-dialog" aria-labelledby="verify-dialog-title">
-        <h3 id="verify-dialog-title">Verified!</h3>
-        <p>Copy the result below and paste it in the verification channel.</p>
+      <dialog id="verify-dialog" class="lore-dialog" aria-labelledby="verify-dialog-title">
+        <h2 id="verify-dialog-title">Verified!</h2>
+        <p class="section-intro">Copy the result below and paste it in the verification channel.</p>
         <div class="copy-row">
           <input id="verify-dialog-value" type="text" readonly>
-          <button id="verify-copy" type="button">Copy</button>
+          <button id="verify-copy" class="btn-primary" type="button">Copy</button>
         </div>
         <p id="verify-copy-status" class="copy-status" role="status" aria-live="polite"></p>
-        <form method="dialog">
-          <button type="submit">Close</button>
+        <form method="dialog" class="form-actions">
+          <button class="btn-secondary" type="submit">Close</button>
         </form>
       </dialog>
     </section>
 
-    <section id="page-decode" class="page" hidden>
-      <h2>Decode</h2>
-      <p>Pick a cipher.</p>
-      <div class="choices">
-        <a class="choice" href="#decode/caesar">Caesar</a>
-        <a class="choice" href="#decode/vigenere">Vigenère</a>
-        <a class="choice" href="#decode/brainfuck">Brainfuck</a>
-        <a class="choice" href="#decode/binary">Binary</a>
-        <a class="choice" href="#decode/morse">Morse</a>
-        <a class="choice" href="#decode/base64">Base64</a>
-      </div>
+    <section id="page-decode" class="page container" hidden>
+      <header class="page-heading">
+        <h1 class="page-title">Decode</h1>
+        <p class="section-intro">Not sure what it is? Try Magic first. Otherwise, pick a cipher.</p>
+      </header>
+      <div class="overview" data-overview="decode"></div>
     </section>
 
-    <section id="page-encode" class="page" hidden>
-      <h2>Encode</h2>
-      <p>Pick a cipher.</p>
-      <div class="choices">
-        <a class="choice" href="#encode/caesar">Caesar</a>
-        <a class="choice" href="#encode/vigenere">Vigenère</a>
-        <a class="choice" href="#encode/brainfuck">Brainfuck</a>
-        <a class="choice" href="#encode/binary">Binary</a>
-        <a class="choice" href="#encode/morse">Morse</a>
-        <a class="choice" href="#encode/base64">Base64</a>
-      </div>
+    <section id="page-encode" class="page container" hidden>
+      <header class="page-heading">
+        <h1 class="page-title">Encode</h1>
+        <p class="section-intro">Pick a cipher to hide your message with.</p>
+      </header>
+      <div class="overview" data-overview="encode"></div>
     </section>
 
-    <section id="page-cipher" class="page" hidden>
-      <h2 id="cipher-title">Decode</h2>
-      <form id="cipher-form">
-        <fieldset data-field="caesar-mode" hidden>
-          <legend>How do you want to decode it?</legend>
-          <label><input type="radio" name="caesar-mode" value="bruteforce" checked> Bruteforce (try every shift)</label>
-          <label><input type="radio" name="caesar-mode" value="specific"> Specific shift</label>
-        </fieldset>
+    <section id="page-cipher" class="page container" hidden>
+      <div class="back-row narrow">
+        <a id="cipher-back" class="back-link" href="#decode">‹ Back to Decode</a>
+      </div>
+      <section class="lore-content-section narrow">
+        <p id="cipher-kicker" class="kicker">Decode</p>
+        <h1 id="cipher-title">Decode</h1>
+        <blockquote id="cipher-description" hidden></blockquote>
+        <form id="cipher-form">
+          <div id="cipher-options-section" hidden>
+            <div id="cipher-options-label" class="faction-group-label">Options</div>
+            <div id="cipher-options" class="options"></div>
+          </div>
 
-        <div data-field="shift" hidden>
-          <label id="cipher-shift-label" for="cipher-shift">Shift</label>
-          <input id="cipher-shift" type="text" inputmode="numeric" autocomplete="off">
+          <div id="cipher-text-field" class="text-field">
+            <div class="faction-group-label"><label id="cipher-text-label" for="cipher-text">Input</label></div>
+            <textarea id="cipher-text" rows="5" spellcheck="false" required></textarea>
+          </div>
+
+          <div class="form-actions">
+            <button id="cipher-submit" class="btn-primary" type="submit">Decode</button>
+          </div>
+        </form>
+        <div id="cipher-output" hidden>
+          <div class="faction-group-label">Output</div>
+          <div id="cipher-result" class="result" role="status" aria-live="polite"></div>
         </div>
-
-        <div data-field="key" hidden>
-          <label for="cipher-key">Key</label>
-          <input id="cipher-key" type="text" autocomplete="off">
-        </div>
-
-        <div data-field="program-input" hidden>
-          <label for="cipher-program-input">Program input (optional)</label>
-          <input id="cipher-program-input" type="text" autocomplete="off">
-        </div>
-
-        <label id="cipher-text-label" for="cipher-text">Text</label>
-        <textarea id="cipher-text" rows="4" required></textarea>
-
-        <button id="cipher-submit" type="submit">Decode</button>
-      </form>
-      <div id="cipher-result" class="result" role="status" aria-live="polite"></div>
+        <details id="cipher-chart-section" class="cipher-group chart-toggle" hidden>
+          <summary class="faction-group-label">Alphabet</summary>
+          <div id="cipher-chart" class="glyph-chart"></div>
+        </details>
+      </section>
     </section>
   </main>
 
   <script src="src/ciphers/alphabet.js"></script>
   <script src="src/ciphers/caesar.js"></script>
+  <script src="src/ciphers/rot47.js"></script>
+  <script src="src/ciphers/atbash.js"></script>
+  <script src="src/ciphers/affine.js"></script>
+  <script src="src/ciphers/keyboard.js"></script>
   <script src="src/ciphers/vigenere.js"></script>
-  <script src="src/ciphers/brainfuck.js"></script>
+  <script src="src/ciphers/autokey.js"></script>
+  <script src="src/ciphers/beaufort.js"></script>
+  <script src="src/ciphers/dateshift.js"></script>
+  <script src="src/ciphers/playfair.js"></script>
+  <script src="src/ciphers/reverse.js"></script>
+  <script src="src/ciphers/railfence.js"></script>
+  <script src="src/ciphers/columnar.js"></script>
   <script src="src/ciphers/binary.js"></script>
-  <script src="src/ciphers/morse.js"></script>
+  <script src="src/ciphers/hex.js"></script>
+  <script src="src/ciphers/decimal.js"></script>
+  <script src="src/ciphers/octal.js"></script>
+  <script src="src/ciphers/base32.js"></script>
+  <script src="src/ciphers/base58.js"></script>
   <script src="src/ciphers/base64.js"></script>
+  <script src="src/ciphers/base85.js"></script>
+  <script src="src/ciphers/url.js"></script>
+  <script src="src/ciphers/morse.js"></script>
+  <script src="src/ciphers/nato.js"></script>
+  <script src="src/ciphers/a1z26.js"></script>
+  <script src="src/ciphers/polybius.js"></script>
+  <script src="src/ciphers/tapcode.js"></script>
+  <script src="src/ciphers/bacon.js"></script>
+  <script src="src/ciphers/t9.js"></script>
+  <script src="src/ciphers/braille.js"></script>
+  <script src="src/ciphers/brainfuck.js"></script>
+  <script src="src/ciphers/pigpen.js"></script>
+  <script src="src/ciphers/unown.js"></script>
+  <script src="src/ciphers/magic.js"></script>
+  <script src="src/english.js"></script>
   <script src="src/answers.js"></script>
   <script src="src/catalog.js"></script>
   <script src="src/search.js"></script>
+  <script src="src/nav.js"></script>
   <script src="src/menu.js"></script>
   <script src="src/search-ui.js"></script>
   <script src="src/cipher-page.js"></script>

@@ -1,23 +1,21 @@
+const fs = require("node:fs");
 const path = require("node:path");
 
-const files = [
-  "ciphers/alphabet.js",
-  "ciphers/caesar.js",
-  "ciphers/vigenere.js",
-  "ciphers/brainfuck.js",
-  "ciphers/binary.js",
-  "ciphers/morse.js",
-  "ciphers/base64.js",
-  "answers.js",
-  "catalog.js",
-  "search.js",
-];
+const root = path.join(__dirname, "..");
+const html = fs.readFileSync(path.join(root, "index.html"), "utf8");
+const BROWSER_ONLY = ["nav.js", "menu.js", "search-ui.js", "cipher-page.js", "verify.js", "router.js"];
 
-for (const file of files) require(path.join(__dirname, "..", "src", file));
+const scripts = [...html.matchAll(/<script src="([^"]+)"/g)].map((m) => m[1]);
+for (const src of scripts) {
+  if (!BROWSER_ONLY.includes(path.basename(src))) require(path.join(root, src));
+}
 
 module.exports = {
   Ciphers: globalThis.Ciphers,
   Answers: globalThis.Answers,
   Catalog: globalThis.Catalog,
   Search: globalThis.Search,
+  English: globalThis.English,
+  scripts,
+  BROWSER_ONLY,
 };

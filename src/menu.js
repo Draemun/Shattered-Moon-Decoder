@@ -35,8 +35,11 @@
       else link.removeAttribute("aria-current");
     });
     const activeLink = sidebar.querySelector("a.active");
-    const submenu = activeLink && activeLink.closest(".submenu");
-    if (submenu) setSubmenuOpen(submenu, true);
+    let submenu = activeLink && activeLink.closest(".submenu");
+    while (submenu) {
+      setSubmenuOpen(submenu, true);
+      submenu = submenu.parentElement.closest(".submenu");
+    }
   }
 
   toggle.addEventListener("click", () => setOpen(!isOpen()));
