@@ -251,3 +251,12 @@ test("red text is easy to read on the dark background", () => {
   const textRules = [...css.matchAll(/([^{}]+)\{[^}]*?\n  color: var\(--accent-(primary|red)\);/g)].map((m) => m[1].trim());
   assert.deepEqual(textRules, [], `these rules still use dark red for text: ${textRules.join(", ")}`);
 });
+
+test("results are a plain list: no banner, no pill badges", () => {
+  const css = fs.readFileSync(path.join(root, "style", "style.css"), "utf8");
+  for (const [name, content] of [["cipher-page.js", cipherPage], ["style.css", css]]) {
+    assert.doesNotMatch(content, /magic-best|magic-cipher|\.badge|"badge|Best guess|Most likely|Known answer found/, `${name} still has the banner or badges`);
+  }
+  assert.match(cipherPage, /item\.classList\.add\("top"\)/);
+  assert.match(cipherPage, /known-mark/);
+});

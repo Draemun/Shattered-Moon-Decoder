@@ -228,37 +228,41 @@
     }
     if (output.rank) rows.sort((a, b) => Number(b.known) - Number(a.known) || b.score - a.score);
     if (output.limit) rows = rows.slice(0, output.limit);
-    const bestScore = Math.max(...rows.map((row) => row.score));
 
+    let top = -1;
+    if (output.rank) top = 0;
+    else if (output.best) {
+      const known = rows.findIndex((row) => row.known);
+      top = known !== -1 ? known : rows.reduce((best, row, i) => (row.score > rows[best].score ? i : best), 0);
+    }
+    showResult(resultRows(rows, top));
+  }
+
+  function resultRows(rows, top) {
     const listEl = document.createElement("ul");
     listEl.className = "bruteforce";
     rows.forEach((row, index) => {
       const item = document.createElement("li");
-      const label = document.createElement("span");
+      if (index === top) item.classList.add("top");
+      const label = document.createElement(row.href ? "a" : "span");
       label.className = "bruteforce-label";
       label.textContent = row.label;
+      if (row.href) label.href = row.href;
       const value = document.createElement("span");
       value.className = "bruteforce-text";
       value.textContent = row.text;
       item.append(label, value);
-      const isBest = output.rank || output.best ? (output.rank ? index === 0 : row.score === bestScore) : false;
       if (row.known) {
-        item.classList.add("match");
-        item.append(badge("Known answer", "keyless"));
-      } else if (isBest) {
-        item.classList.add("best");
-        item.append(badge("Best guess", "keyed"));
+        const mark = document.createElement("span");
+        mark.className = "known-mark";
+        mark.textContent = "✓";
+        mark.title = "Matches a known answer";
+        mark.setAttribute("aria-label", "Matches a known answer");
+        item.append(mark);
       }
       listEl.append(item);
     });
-    showResult(listEl);
-  }
-
-  function badge(textContent, kind) {
-    const el = document.createElement("span");
-    el.className = `badge badge-${kind}`;
-    el.textContent = textContent;
-    return el;
+    return listEl;
   }
 
   function glyphSvg(glyph, size = 40) {
@@ -314,51 +318,13 @@
       showText("Magic couldn't find anything readable. Try picking a cipher yourself.", "warning");
       return;
     }
-    const [best, ...others] = candidates;
-    const wrapper = document.createElement("div");
-
-    const card = document.createElement("div");
-    card.className = "magic-best";
-    const heading = document.createElement("p");
-    heading.className = "kicker";
-    heading.textContent = best.known ? "Known answer found" : "Most likely";
-    const name = document.createElement("h3");
-    name.className = "magic-cipher";
-    name.textContent = best.label;
-    const text = document.createElement("div");
-    text.className = "result success";
-    text.textContent = best.text;
-    const open = document.createElement("a");
-    open.className = "btn-secondary";
-    open.href = `#decode/${best.method}`;
-    open.textContent = `Open the ${Catalog.cipher(best.method).name} decoder ›`;
-    const actions = document.createElement("div");
-    actions.className = "form-actions";
-    actions.append(open);
-    card.append(heading, name, text, actions);
-    wrapper.append(card);
-
-    if (others.length > 0) {
-      const label = document.createElement("div");
-      label.className = "faction-group-label";
-      label.textContent = "Other possibilities";
-      const listEl = document.createElement("ul");
-      listEl.className = "bruteforce";
-      others.forEach((candidate) => {
-        const item = document.createElement("li");
-        const link = document.createElement("a");
-        link.className = "bruteforce-label";
-        link.href = `#decode/${candidate.method}`;
-        link.textContent = candidate.label;
-        const value = document.createElement("span");
-        value.className = "bruteforce-text";
-        value.textContent = candidate.text;
-        item.append(link, value);
-        listEl.append(item);
-      });
-      wrapper.append(label, listEl);
-    }
-    showResult(wrapper);
+    const rows = candidates.map((candidate) => ({
+      label: candidate.label,
+      href: `#decode/${candidate.method}`,
+      text: candidate.text,
+      known: candidate.known,
+    }));
+    showResult(resultRows(rows, 0));
   }
 
   function renderChart(kind) {
