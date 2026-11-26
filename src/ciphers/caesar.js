@@ -1,19 +1,13 @@
 (function () {
   const Ciphers = (globalThis.Ciphers = globalThis.Ciphers || {});
 
-  function toShift(shift) {
-    const n = typeof shift === "string" && shift.trim() === "" ? NaN : Number(shift);
-    if (!Number.isInteger(n)) throw new Error("The shift must be a whole number.");
-    return n;
-  }
-
   function decode(text, shift) {
-    const n = toShift(shift);
-    return Array.from(text, (ch) => Ciphers.alphabet.shiftLetter(ch, -n)).join("");
+    const n = Ciphers.alphabet.toInteger(shift, "The shift");
+    return Ciphers.alphabet.mapLetters(text, (x) => x - n);
   }
 
   function encode(text, shift) {
-    return decode(text, -toShift(shift));
+    return decode(text, -Ciphers.alphabet.toInteger(shift, "The shift"));
   }
 
   function bruteforce(text) {
