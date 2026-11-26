@@ -1,0 +1,8 @@
+body { margin: 0; display: flex; min-height: 100vh; font-family: system-ui, sans-serif; }
+#sidebar { width: 200px; padding: 1rem; border-right: 1px solid #ccc; }
+#sidebar nav { display: flex; flex-direction: column; gap: 0.5rem; }
+#sidebar .nav-link.active { font-weight: bold; }
+#content { flex: 1; padding: 1rem 2rem; }
+form { display: flex; flex-direction: column; gap: 0.4rem; max-width: 320px; }
+.result.success { color: green; }
+.result.warning { color: #b45309; }

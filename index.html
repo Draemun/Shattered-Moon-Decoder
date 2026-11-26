@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shattered Moon Decoder</title>
+  <link rel="stylesheet" href="style/style.css">
+</head>
+<body>
+  <aside id="sidebar">
+    <h1>Shattered Moon</h1>
+    <nav>
+      <button class="nav-link" data-page="home">Home</button>
+      <button class="nav-link" data-page="verify">Server Verification</button>
+      <button class="nav-link" data-page="decode">Decode</button>
+    </nav>
+  </aside>
+
+  <main id="content">
+    <section id="page-home" class="page">
+      <h2>What do you want to do?</h2>
+      <div class="choices">
+        <button class="choice" data-page="verify">Server Verification</button>
+        <button class="choice" data-page="decode">Decode</button>
+      </div>
+    </section>
+
+    <section id="page-verify" class="page" hidden>
+      <h2>Server Verification</h2>
+      <form id="verify-form">
+        <label for="verify-text">Encoded text</label>
+        <input id="verify-text" type="text" autocomplete="off" required>
+
+        <label for="verify-shift">Decoding shift</label>
+        <input id="verify-shift" type="number" step="1" required>
+
+        <button type="submit">Verify</button>
+      </form>
+      <div id="verify-result" class="result" role="status" aria-live="polite"></div>
+    </section>
+
+    <section id="page-decode" class="page" hidden>
+      <h2>Decode</h2>
+      <form id="decode-form">
+        <label for="decode-text">Encoded text</label>
+        <input id="decode-text" type="text" autocomplete="off" required>
+
+        <label for="decode-shift">Decoding shift</label>
+        <input id="decode-shift" type="number" step="1" required>
+
+        <button type="submit">Decode</button>
+      </form>
+      <div id="decode-result" class="result" role="status" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <script src="src/cipher.js"></script>
+  <script src="src/answers.js"></script>
+  <script src="src/verify.js"></script>
+  <script src="src/decode.js"></script>
+  <script src="src/router.js"></script>
+</body>
+</html>
