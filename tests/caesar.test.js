@@ -26,6 +26,19 @@ test("handles shifts larger than 26 and negative shifts", () => {
   assert.equal(caesar.decode("Khoor", -23), "Hello");
 });
 
+test("a minus in front of the shift decodes the other way", () => {
+  assert.equal(caesar.decode("Mjqqt", "-5"), "Rovvy");
+  assert.equal(caesar.decode("Hello", "-3"), "Khoor");
+  assert.equal(caesar.decode(caesar.encode("Shattered Moon", "-21"), "-21"), "Shattered Moon");
+});
+
+test("phone and autocorrect minus signs work too", () => {
+  for (const shift of ["−3", "–3", "—3", "- 3", " -3 "]) {
+    assert.equal(caesar.decode("Hello", shift), "Khoor", `failed for "${shift}"`);
+  }
+  assert.equal(caesar.decode("Hello", "+3"), "Ebiil");
+});
+
 test("shift 0 leaves text unchanged", () => {
   assert.equal(caesar.decode("Hello", 0), "Hello");
 });

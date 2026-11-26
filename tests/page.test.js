@@ -2,13 +2,11 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
-const { Ciphers } = require("./load");
+const { Ciphers, Catalog, scripts, BROWSER_ONLY } = require("./load");
 
 const root = path.join(__dirname, "..");
 const html = fs.readFileSync(path.join(root, "index.html"), "utf8");
 const cipherPage = fs.readFileSync(path.join(root, "src", "cipher-page.js"), "utf8");
-
-const CIPHERS = ["caesar", "vigenere", "brainfuck", "binary", "morse", "base64"];
 
 function section(pattern) {
   const match = html.match(pattern);
@@ -22,18 +20,29 @@ function hashLinks(markup) {
 
 const sidebar = section(/<nav class="sidebar" id="sidebar"[\s\S]*?<\/nav>/);
 
-test("every script and stylesheet in index.html exists", () => {
-  const refs = [...html.matchAll(/(?:src|href)="([^"#]+)"/g)].map((m) => m[1]);
+test("every local script and stylesheet in index.html exists", () => {
+  const refs = [...html.matchAll(/(?:src|href)="([^"#]+)"/g)].map((m) => m[1]).filter((ref) => !/^https?:/.test(ref));
   assert.ok(refs.length > 0);
   for (const ref of refs) {
     assert.ok(fs.existsSync(path.join(root, ref)), `${ref} is missing`);
   }
 });
 
-test("every cipher file in src/ciphers is loaded by index.html", () => {
-  for (const file of fs.readdirSync(path.join(root, "src", "ciphers"))) {
-    assert.ok(html.includes(`src/ciphers/${file}`), `${file} is not loaded`);
+test("every file in src is loaded by index.html", () => {
+  const files = [
+    ...fs.readdirSync(path.join(root, "src")).filter((f) => f.endsWith(".js")).map((f) => `src/${f}`),
+    ...fs.readdirSync(path.join(root, "src", "ciphers")).map((f) => `src/ciphers/${f}`),
+  ];
+  for (const file of files) assert.ok(scripts.includes(file), `${file} is not loaded`);
+});
+
+test("browser-only scripts load after the code they use", () => {
+  const firstBrowserOnly = scripts.findIndex((src) => BROWSER_ONLY.includes(path.basename(src)));
+  for (const src of scripts.slice(firstBrowserOnly)) {
+    assert.ok(BROWSER_ONLY.includes(path.basename(src)), `${src} should load before the page scripts`);
   }
+  assert.ok(scripts.indexOf("src/nav.js") < scripts.indexOf("src/menu.js"), "nav.js must build the menu before menu.js wires it");
+  assert.equal(scripts.at(-1), "src/router.js");
 });
 
 test("the burger button sits in the burger menu and controls the sidebar", () => {
@@ -41,73 +50,60 @@ test("the burger button sits in the burger menu and controls the sidebar", () =>
   assert.match(html, /id="menu-toggle"[^>]*aria-controls="sidebar"/);
 });
 
-test("the sidebar has Home, Server Verification and Decode/Encode submenus with every cipher", () => {
-  assert.deepEqual(hashLinks(sidebar), [
-    "home",
-    "verify",
-    "decode",
-    ...CIPHERS.map((c) => `decode/${c}`),
-    "encode",
-    ...CIPHERS.map((c) => `encode/${c}`),
-  ]);
+test("the sidebar has Home, Server Verification, Decode and Encode", () => {
+  assert.deepEqual(hashLinks(sidebar), ["home", "verify", "decode", "encode"]);
+  for (const mode of ["decode", "encode"]) {
+    assert.match(sidebar, new RegExp(`aria-controls="submenu-${mode}"`));
+    assert.match(sidebar, new RegExp(`id="submenu-${mode}" data-menu="${mode}" hidden`));
+  }
 });
 
-test("sidebar links carry a matching data-page", () => {
-  const pairs = [...sidebar.matchAll(/href="#([^"]+)" data-page="([^"]+)"/g)];
-  assert.equal(pairs.length, hashLinks(sidebar).length);
-  for (const [, href, page] of pairs) assert.equal(page, href);
-});
-
-test("every submenu toggle controls an existing, initially collapsed list", () => {
-  const toggles = [...sidebar.matchAll(/class="submenu-toggle"[^>]*aria-controls="([^"]+)"/g)].map((m) => m[1]);
-  assert.deepEqual(toggles, ["submenu-decode", "submenu-encode"]);
-  for (const id of toggles) {
-    assert.match(sidebar, new RegExp(`class="submenu-items" id="${id}" hidden`));
+test("the Decode and Encode pages have a cipher overview", () => {
+  for (const mode of ["decode", "encode"]) {
+    assert.match(section(new RegExp(`<section id="page-${mode}"[\\s\\S]*?<\\/section>`)), new RegExp(`data-overview="${mode}"`));
   }
 });
 
 test("the home page only offers Server Verification and Decode", () => {
-  assert.deepEqual(hashLinks(section(/<section id="page-home"[\s\S]*?<\/section>/)), ["verify", "decode"]);
+  assert.deepEqual(hashLinks(section(/<section id="page-home"[\s\S]*?<section id="page-verify"/)), ["verify", "decode"]);
 });
 
-test("the Decode and Encode pages list every cipher", () => {
-  for (const mode of ["decode", "encode"]) {
-    const page = section(new RegExp(`<section id="page-${mode}"[\\s\\S]*?<\\/section>`));
-    assert.deepEqual(hashLinks(page), CIPHERS.map((c) => `${mode}/${c}`));
+test("every catalog cipher has a category, a page config and working functions", () => {
+  const categoryIds = Catalog.categories.map((c) => c.id);
+  for (const cipher of Catalog.ciphers) {
+    assert.ok(cipher.category === null || categoryIds.includes(cipher.category), `${cipher.id} has an unknown category`);
+    assert.match(cipherPage, new RegExp(`\\n    ${cipher.id}: \\{`), `${cipher.id} is missing from cipher-page.js`);
+    for (const mode of cipher.modes) {
+      assert.equal(typeof Ciphers[cipher.id][mode], "function", `${cipher.id} has no ${mode}()`);
+    }
   }
 });
 
+test("catalog ids are unique", () => {
+  const ids = Catalog.ciphers.map((c) => c.id);
+  assert.equal(new Set(ids).size, ids.length);
+});
+
+test("the menu groups every cipher exactly once per mode", () => {
+  for (const mode of ["decode", "encode"]) {
+    const { top, groups } = Catalog.menu(mode);
+    const listed = [...top, ...groups.flatMap((g) => g.ciphers)].map((c) => c.id);
+    const expected = Catalog.ciphers.filter((c) => c.modes.includes(mode)).map((c) => c.id);
+    assert.deepEqual([...listed].sort(), [...expected].sort());
+  }
+  assert.deepEqual(Catalog.menu("decode").top.map((c) => c.id), ["magic"]);
+  assert.deepEqual(Catalog.menu("encode").top, []);
+});
+
 test("every linked page exists", () => {
-  for (const route of new Set(hashLinks(html))) {
+  for (const route of new Set([...hashLinks(html), ...Catalog.pages.map((p) => p.route)])) {
     const target = route.includes("/") ? "cipher" : route;
     assert.ok(html.includes(`id="page-${target}"`), `page for ${route} is missing`);
   }
 });
 
-test("every cipher has decode and encode functions", () => {
-  for (const cipher of CIPHERS) {
-    assert.equal(typeof Ciphers[cipher].decode, "function", `${cipher} has no decode()`);
-    assert.equal(typeof Ciphers[cipher].encode, "function", `${cipher} has no encode()`);
-  }
-});
-
-test("the cipher page is configured for every cipher", () => {
-  for (const cipher of CIPHERS) {
-    assert.match(cipherPage, new RegExp(`\\b${cipher}: \\{`), `${cipher} is missing from cipher-page.js`);
-  }
-});
-
-test("every field the cipher page uses exists in index.html", () => {
-  const fields = new Set(
-    [...cipherPage.matchAll(/fields: \[([^\]]*)\]/g)].flatMap((m) => [...m[1].matchAll(/"([^"]+)"/g)].map((f) => f[1]))
-  );
-  for (const field of fields) {
-    assert.ok(html.includes(`data-field="${field}"`), `data-field="${field}" is missing`);
-  }
-});
-
 test("every element the page scripts use exists in index.html", () => {
-  for (const file of ["verify.js", "menu.js", "cipher-page.js", "search-ui.js"]) {
+  for (const file of BROWSER_ONLY) {
     const code = fs.readFileSync(path.join(root, "src", file), "utf8");
     for (const id of [...code.matchAll(/getElementById\("([^"]+)"\)/g)].map((m) => m[1])) {
       assert.ok(html.includes(`id="${id}"`), `#${id} used by ${file} is missing`);
@@ -122,19 +118,100 @@ test("a successful verification opens a dialog with a copy button and channel in
   assert.match(dialog, /verification channel/);
 });
 
-test("shifts are typed as numbers, not picked with a number spinner", () => {
+test("shift inputs are typed, not spinners, and suggest nothing", () => {
   assert.doesNotMatch(html, /type="number"/);
-  for (const id of ["verify-shift", "cipher-shift"]) {
-    assert.match(html, new RegExp(`id="${id}" type="text" inputmode="numeric"`));
+  const input = section(/<input id="verify-shift"[^>]*>/);
+  assert.match(input, /type="text"/);
+  assert.doesNotMatch(input, /inputmode/, "a numeric keypad would hide the minus key");
+  assert.doesNotMatch(cipherPage, /inputMode/, "a numeric keypad would hide the minus key");
+  assert.match(input, /autocomplete="off"/);
+  assert.doesNotMatch(input, /placeholder|value=|list=/);
+  assert.match(cipherPage, /input\.autocomplete = "off"/);
+  assert.doesNotMatch(cipherPage, /placeholder/);
+});
+
+test("the background has the main site's stars and moon", () => {
+  assert.match(html, /class="stars"/);
+  assert.match(html, /class="moon-crack"/);
+  const css = fs.readFileSync(path.join(root, "style", "style.css"), "utf8");
+  for (const name of ["stars-drift", "stars-blink", "moon-curve", "moon-color", "glitch-skew", "warning-pulse"]) {
+    assert.match(css, new RegExp(`@keyframes ${name} `), `missing @keyframes ${name}`);
+  }
+  assert.match(css, /prefers-reduced-motion/);
+});
+
+test("pages use the main site's home, lore and archive styles", () => {
+  const home = section(/<section id="page-home"[\s\S]*?<section id="page-verify"/);
+  assert.match(home, /class="glitch"[\s\S]*class="warning-section"/);
+  for (const page of ["verify", "cipher"]) {
+    assert.match(section(new RegExp(`<section id="page-${page}"[\\s\\S]*?<\\/section>`)), /class="lore-content-section/);
+  }
+  for (const mode of ["decode", "encode"]) {
+    assert.match(section(new RegExp(`<section id="page-${mode}"[\\s\\S]*?<\\/section>`)), /class="page-title"/);
+  }
+  assert.match(fs.readFileSync(path.join(root, "src", "nav.js"), "utf8"), /faction-row/);
+});
+
+test("the Entity Log look and Chroniclers text are gone", () => {
+  const files = ["index.html", "style/style.css", "src/nav.js", "src/cipher-page.js"];
+  for (const file of files) {
+    const content = fs.readFileSync(path.join(root, file), "utf8");
+    assert.doesNotMatch(content, /chronicler/i, `${file} still mentions Chroniclers`);
+    assert.doesNotMatch(content, /terminal-|entity-filter|filter-btn/, `${file} still uses the Entity Log style`);
   }
 });
 
-test("shift inputs don't suggest a value", () => {
-  for (const id of ["verify-shift", "cipher-shift"]) {
-    const input = section(new RegExp(`<input id="${id}"[^>]*>`));
-    assert.doesNotMatch(input, /placeholder|value=|list=/);
-    assert.match(input, /autocomplete="off"/);
+test("the cipher page no longer shows a Needs line", () => {
+  assert.doesNotMatch(html, /cipher-needs/);
+  assert.doesNotMatch(cipherPage, /Needs:/);
+});
+
+test("the Popular list only holds real ciphers, with Magic first when decoding", () => {
+  for (const mode of ["decode", "encode"]) {
+    const { popular } = Catalog.menu(mode);
+    assert.ok(popular.length >= 5);
+    for (const cipher of popular) assert.ok(cipher.modes.includes(mode));
   }
+  assert.equal(Catalog.menu("decode").popular[0].id, "magic");
+  assert.ok(!Catalog.menu("encode").popular.some((c) => c.id === "magic"));
+});
+
+test("the Unown font is bundled, credited and loaded by the stylesheet", () => {
+  const css = fs.readFileSync(path.join(root, "style", "style.css"), "utf8");
+  const font = css.match(/url\("\.\.\/(fonts\/[^"]+)"\)/);
+  assert.ok(font, "no @font-face url found");
+  assert.ok(fs.existsSync(path.join(root, font[1])), `${font[1]} is missing`);
+  const credits = fs.readFileSync(path.join(root, "fonts", "CREDITS.txt"), "utf8");
+  assert.match(credits, /free for all uses/);
+});
+
+test("the home page has no quote, just two plain buttons", () => {
+  const home = section(/<section id="page-home"[\s\S]*?<section id="page-verify"/);
+  assert.doesNotMatch(home, /main-quote|broken moon/);
+  const buttons = [...home.matchAll(/<a class="btn-primary btn-big" href="#([^"]+)">([^<]+)<\/a>/g)];
+  assert.deepEqual(buttons.map((m) => [m[1], m[2]]), [["verify", "Server Verification"], ["decode", "Decode"]]);
+  const panel = home.match(/<section class="warning-section">[\s\S]*?<\/section>/)[0];
+  assert.doesNotMatch(panel, /faction-row-tag|warning-intro|<p |<span/, "the buttons should have no subtext");
+});
+
+test("nothing says what a cipher needs any more", () => {
+  for (const file of ["index.html", "src/nav.js", "src/cipher-page.js", "src/catalog.js"]) {
+    assert.doesNotMatch(fs.readFileSync(path.join(root, file), "utf8"), /needs|Needs a key|No key|Can bruteforce/i, `${file} still mentions needs`);
+  }
+});
+
+test("symbol decoders label their keys and encoders keep the alphabet folded away", () => {
+  assert.match(html, /<details id="cipher-chart-section"[^>]*hidden>/);
+  assert.match(cipherPage, /renderChart\(entry\.category === "symbols" && mode === "encode"/);
+  assert.match(cipherPage, /chartSection\.open = false/);
+  assert.match(cipherPage, /glyph-key-letter/);
+});
+
+test("cipher pages link back to their Decode or Encode list", () => {
+  const cipher = section(/<section id="page-cipher"[\s\S]*?<\/section>/);
+  assert.match(cipher, /<a id="cipher-back" class="back-link" href="#decode">/);
+  assert.match(cipherPage, /back\.href = `#\$\{mode\}`/);
+  assert.match(cipherPage, /Back to \$\{verb\}/);
 });
 
 test("the project code has no comments", () => {
@@ -144,8 +221,13 @@ test("the project code has no comments", () => {
     ...fs.readdirSync(path.join(root, "src")).filter((f) => f.endsWith(".js")).map((f) => `src/${f}`),
     ...fs.readdirSync(path.join(root, "src", "ciphers")).map((f) => `src/ciphers/${f}`),
   ];
+  const patterns = {
+    ".html": /<!--/,
+    ".css": /\/\*/,
+    ".js": /\/\*|^\s*\/\/|[;{}),]\s*\/\/(?!\S*["'`])/m,
+  };
   for (const file of files) {
     const content = fs.readFileSync(path.join(root, file), "utf8");
-    assert.doesNotMatch(content, /<!--|\/\*|^\s*\/\/|\s\/\/\s/m, `${file} contains a comment`);
+    assert.doesNotMatch(content, patterns[path.extname(file)], `${file} contains a comment`);
   }
 });

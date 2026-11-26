@@ -43,9 +43,19 @@ test("adding decode or encode narrows the results", () => {
 });
 
 test("searching decode or encode lists every one of them", () => {
-  const ids = Catalog.ciphers.map((c) => c.id);
-  assert.deepEqual(routes("decode"), ["decode", ...ids.map((id) => `decode/${id}`)]);
-  assert.deepEqual(routes("encoder"), ["encode", ...ids.map((id) => `encode/${id}`)]);
+  const ids = (mode) => Catalog.ciphers.filter((c) => c.modes.includes(mode)).map((c) => c.id);
+  assert.deepEqual(routes("decode"), ["decode", ...ids("decode").map((id) => `decode/${id}`)]);
+  assert.deepEqual(routes("encoder"), ["encode", ...ids("encode").map((id) => `encode/${id}`)]);
+});
+
+test("new ciphers can be found, with or without typos", () => {
+  assert.deepEqual(routes("atbash"), ["decode/atbash", "encode/atbash"]);
+  assert.deepEqual(routes("playfiar"), ["decode/playfair", "encode/playfair"]);
+  assert.deepEqual(routes("date shift"), ["decode/dateshift", "encode/dateshift"]);
+  assert.deepEqual(routes("pigpen"), ["decode/pigpen", "encode/pigpen"]);
+  assert.deepEqual(routes("magic"), ["decode/magic"]);
+  assert.deepEqual(routes("unown"), ["decode/unown", "encode/unown"]);
+  assert.deepEqual(routes("pokemon"), ["decode/unown", "encode/unown"]);
 });
 
 test("decoder searches don't drift into encoders through typo matching", () => {
@@ -54,7 +64,12 @@ test("decoder searches don't drift into encoders through typo matching", () => {
 });
 
 test("keywords find ciphers", () => {
-  assert.deepEqual(routes("shift"), ["decode/caesar", "encode/caesar"]);
+  assert.deepEqual(routes("shift"), [
+    "decode/caesar", "decode/keyboard", "decode/dateshift",
+    "encode/caesar", "encode/keyboard", "encode/dateshift",
+  ]);
+  assert.deepEqual(routes("zigzag"), ["decode/railfence", "encode/railfence"]);
+  assert.deepEqual(routes("auto detect"), ["decode/magic"]);
   assert.deepEqual(routes("b64"), ["decode/base64", "encode/base64"]);
 });
 
@@ -85,7 +100,12 @@ test("every catalog route opens a real page", () => {
   for (const page of Catalog.pages) {
     const target = page.route.includes("/") ? "cipher" : page.route;
     assert.ok(html.includes(`id="page-${target}"`), `${page.route} has no page`);
-    assert.ok(html.includes(`href="#${page.route}"`), `${page.route} is not in the menu`);
+    if (page.route.includes("/")) {
+      const [mode, id] = page.route.split("/");
+      assert.ok(Catalog.menu(mode).top.concat(...Catalog.menu(mode).groups.map((g) => g.ciphers)).some((c) => c.id === id), `${page.route} is not in the menu`);
+    } else {
+      assert.ok(html.includes(`href="#${page.route}"`), `${page.route} is not in the menu`);
+    }
   }
 });
 
