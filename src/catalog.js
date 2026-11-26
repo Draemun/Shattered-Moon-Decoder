@@ -9,7 +9,7 @@
   ];
 
   const ciphers = [
-    { id: "magic", name: "Magic (auto-detect)", category: null, modes: ["decode"], keywords: ["auto", "detect", "guess", "unknown", "identify"] },
+    { id: "magic", name: "Auto-detect", category: null, modes: ["decode"], keywords: ["magic", "auto", "detect", "guess", "unknown", "identify"] },
 
     { id: "caesar", name: "Caesar", category: "substitution", keywords: ["cesar", "shift", "rot", "rot13", "bruteforce"] },
     { id: "rot47", name: "ROT47", category: "substitution", keywords: ["rot", "symbols"] },

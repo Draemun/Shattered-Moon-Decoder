@@ -260,3 +260,49 @@ test("results are a plain list: no banner, no pill badges", () => {
   assert.match(cipherPage, /item\.classList\.add\("top"\)/);
   assert.match(cipherPage, /known-mark/);
 });
+
+test("only the main buttons and the home panel glow", () => {
+  const css = fs.readFileSync(path.join(root, "style", "style.css"), "utf8");
+  const allowed = [".moon-crack", "@keyframes moon-color", ".search-results", "@keyframes glitch-skew", ".warning-section", ".warning-title", ".btn-primary", ".btn-primary:focus-visible"];
+  let selector = "";
+  for (const line of css.split("\n")) {
+    if (/^\S.*\{$/.test(line)) selector = line.replace(/\s*\{$/, "").trim();
+    if (/(box-shadow|text-shadow|drop-shadow)/.test(line)) {
+      assert.ok(allowed.includes(selector), `${selector} still glows`);
+    }
+  }
+});
+
+test("spaced-out uppercase labels are only used on the Decode/Encode lists", () => {
+  assert.doesNotMatch(html, /class="faction-group-label"/);
+  assert.doesNotMatch(cipherPage, /faction-group-label/);
+  assert.match(fs.readFileSync(path.join(root, "src", "nav.js"), "utf8"), /faction-group-label/);
+  for (const label of ["Input", "Options", "Output", "Alphabet"]) {
+    assert.match(html, new RegExp(`class="section-label"[^>]*>(<label[^>]*>)?${label}<`), `${label} should be a plain label`);
+  }
+});
+
+test("no helper sentences under titles", () => {
+  for (const page of ["verify", "decode", "encode", "cipher"]) {
+    const markup = section(new RegExp(`<section id="page-${page}"[\\s\\S]*?<\\/section>`)).replace(/<dialog[\s\S]*<\/dialog>/, "");
+    assert.doesNotMatch(markup, /section-intro|<blockquote/, `${page} still has a helper sentence`);
+  }
+  assert.doesNotMatch(cipherPage, /\babout:/);
+});
+
+test("Magic is called Auto-detect but can still be searched as magic", () => {
+  assert.equal(Catalog.cipher("magic").name, "Auto-detect");
+  assert.ok(Catalog.cipher("magic").keywords.includes("magic"));
+  assert.doesNotMatch(html + cipherPage, /Magic \(auto-detect\)|Try Magic/);
+});
+
+test("on phones the buttons sit on a solid top bar and menu and search never overlap", () => {
+  const css = fs.readFileSync(path.join(root, "style", "style.css"), "utf8");
+  const mobile = css.slice(css.indexOf("@media (max-width: 768px)"));
+  assert.match(html, /<div class="mobile-bar" aria-hidden="true"><\/div>/);
+  assert.match(mobile, /\.mobile-bar \{\s*display: block;\s*position: fixed;/);
+  assert.match(mobile, /\.container \{\s*padding: 108px/);
+  assert.match(css, /\.burger-icon\[aria-expanded="true"\] span:nth-child\(1\)/);
+  assert.match(fs.readFileSync(path.join(root, "src", "menu.js"), "utf8"), /SearchUI\.close\(\)/);
+  assert.match(fs.readFileSync(path.join(root, "src", "search-ui.js"), "utf8"), /Menu\.close\(\)/);
+});

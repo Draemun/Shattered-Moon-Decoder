@@ -8,6 +8,7 @@
   const index = Search.buildIndex(Catalog.pages);
 
   function setOpen(open) {
+    if (open && globalThis.Menu) Menu.close();
     box.hidden = !open;
     toggle.setAttribute("aria-expanded", String(open));
     if (open) {
@@ -17,6 +18,8 @@
       results.hidden = true;
     }
   }
+
+  globalThis.SearchUI = { close: () => setOpen(false) };
 
   function close() {
     input.value = "";

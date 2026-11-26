@@ -3,7 +3,6 @@
 
   const form = document.getElementById("cipher-form");
   const title = document.getElementById("cipher-title");
-  const description = document.getElementById("cipher-description");
   const optionsBox = document.getElementById("cipher-options");
   const textField = document.getElementById("cipher-text-field");
   const textInput = document.getElementById("cipher-text");
@@ -32,7 +31,6 @@
   const methods = {
     magic: {
       decode: {
-        about: "Paste anything. Magic tries every cipher it can without a key and tells you which one it most likely is.",
         run: (t) => ({ magic: Ciphers.magic.detect(t, { isKnown: Answers.find }) }),
       },
     },
@@ -48,12 +46,12 @@
       encode: { options: [integer("shift", "Encoding shift")], run: (t, v) => Ciphers.caesar.encode(t, v.shift) },
     },
     rot47: {
-      decode: { about: "Rotates every printable character by 47. Encoding and decoding are the same.", run: (t) => Ciphers.rot47.decode(t) },
-      encode: { about: "Rotates every printable character by 47. Encoding and decoding are the same.", run: (t) => Ciphers.rot47.encode(t) },
+      decode: { run: (t) => Ciphers.rot47.decode(t) },
+      encode: { run: (t) => Ciphers.rot47.encode(t) },
     },
     atbash: {
-      decode: { about: "A becomes Z, B becomes Y, and so on. Encoding and decoding are the same.", run: (t) => Ciphers.atbash.decode(t) },
-      encode: { about: "A becomes Z, B becomes Y, and so on. Encoding and decoding are the same.", run: (t) => Ciphers.atbash.encode(t) },
+      decode: { run: (t) => Ciphers.atbash.decode(t) },
+      encode: { run: (t) => Ciphers.atbash.encode(t) },
     },
     affine: {
       decode: {
@@ -93,19 +91,16 @@
     },
     dateshift: {
       decode: {
-        about: "Each letter is shifted by the next digit of the date, e.g. 11/26/2026 gives 1, 1, 2, 6, 2, 0, 2, 6.",
-        options: [text("date", "Date")],
+        options: [text("date", "Date (each digit is one shift)")],
         run: (t, v) => Ciphers.dateshift.decode(t, v.date),
       },
       encode: {
-        about: "Each letter is shifted by the next digit of the date, e.g. 11/26/2026 gives 1, 1, 2, 6, 2, 0, 2, 6.",
-        options: [text("date", "Date")],
+        options: [text("date", "Date (each digit is one shift)")],
         run: (t, v) => Ciphers.dateshift.encode(t, v.date),
       },
     },
     playfair: {
       decode: {
-        about: "I and J share a square. Padding X letters stay in the result.",
         options: [text("key", "Key", { optional: true })],
         run: (t, v) => Ciphers.playfair.decode(t, v.key),
       },
@@ -151,7 +146,7 @@
     nato: { decode: { label: "NATO words", run: (t) => Ciphers.nato.decode(t) }, encode: { run: (t) => Ciphers.nato.encode(t) } },
     a1z26: { decode: { label: "Numbers", run: (t) => Ciphers.a1z26.decode(t) }, encode: { run: (t) => Ciphers.a1z26.encode(t) } },
     tapcode: {
-      decode: { about: 'Use digit pairs like "23 15" or tap groups like "... ..". C and K share a square.', label: "Tap code", run: (t) => Ciphers.tapcode.decode(t) },
+      decode: { label: 'Tap code ("23 15" or ".. ...")', run: (t) => Ciphers.tapcode.decode(t) },
       encode: {
         options: [choice("format", "Output format", [["numbers", "Numbers (23 15)"], ["dots", "Taps (.. ...)"]])],
         run: (t, v) => Ciphers.tapcode.encode(t, v.format),
@@ -175,7 +170,7 @@
       },
     },
     t9: {
-      decode: { about: 'Repeat a key for each letter, like "44 444" for HI. Use 0 for a space.', label: "Key presses", run: (t) => Ciphers.t9.decode(t) },
+      decode: { label: 'Key presses ("44 444" = HI, 0 = space)', run: (t) => Ciphers.t9.decode(t) },
       encode: { run: (t) => Ciphers.t9.encode(t) },
     },
     braille: { decode: { label: "Braille", run: (t) => Ciphers.braille.decode(t) }, encode: { run: (t) => Ciphers.braille.encode(t) } },
@@ -185,17 +180,16 @@
         options: [text("input", "Program input", { optional: true })],
         run: (t, v) => Ciphers.brainfuck.run(t, v.input),
       },
-      encode: { about: "Builds a Brainfuck program that prints your text.", run: (t) => Ciphers.brainfuck.encode(t) },
+      encode: { run: (t) => Ciphers.brainfuck.encode(t) },
     },
 
     pigpen: {
-      decode: { about: "Click the symbols in order to spell the message.", picker: "pigpen" },
+      decode: { picker: "pigpen" },
       encode: { run: (t) => ({ glyphs: Ciphers.pigpen.encode(t), kind: "pigpen" }) },
     },
     unown: {
-      decode: { about: "Click the Unown in order to spell the message.", picker: "unown" },
+      decode: { picker: "unown" },
       encode: {
-        about: "Letters, ! and ? become Unown. Everything else stays as it is.",
         run: (t) => ({ glyphs: Ciphers.unown.encode(t), kind: "unown" }),
       },
     },
@@ -315,7 +309,7 @@
 
   function showMagic(candidates) {
     if (candidates.length === 0) {
-      showText("Magic couldn't find anything readable. Try picking a cipher yourself.", "warning");
+      showText("Nothing readable found. Try picking a cipher yourself.", "warning");
       return;
     }
     const rows = candidates.map((candidate) => ({
@@ -458,9 +452,7 @@
     const verb = mode === "decode" ? "Decode" : "Encode";
     const category = Nav.categoryName(entry);
     title.textContent = entry.name;
-    kicker.textContent = `${verb} · ${category}`;
-    description.textContent = config.about || "";
-    description.hidden = !config.about;
+    kicker.textContent = category === entry.name ? verb : `${verb} · ${category}`;
     textLabel.textContent = config.label || (mode === "decode" ? "Encoded text" : "Text");
     submitButton.textContent = verb;
 

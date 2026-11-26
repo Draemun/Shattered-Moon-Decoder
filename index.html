@@ -12,6 +12,7 @@
 <body>
   <div class="stars" aria-hidden="true"></div>
   <div class="moon-crack" aria-hidden="true"></div>
+  <div class="mobile-bar" aria-hidden="true"></div>
 
   <div class="burger-menu" id="burger-menu">
     <button class="burger-icon" id="menu-toggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="sidebar">
@@ -71,9 +72,8 @@
     <section id="page-verify" class="page container" hidden>
       <section class="lore-content-section narrow">
         <h1>Server Verification</h1>
-        <p class="section-intro">Enter the encoded text and its shift. Upper or lower case doesn't matter.</p>
         <form id="verify-form">
-          <div class="faction-group-label">Input</div>
+          <div class="section-label">Input</div>
           <div class="field">
             <label for="verify-text">Encoded text</label>
             <input id="verify-text" type="text" autocomplete="off" required>
@@ -106,7 +106,6 @@
     <section id="page-decode" class="page container" hidden>
       <header class="page-heading">
         <h1 class="page-title">Decode</h1>
-        <p class="section-intro">Not sure what it is? Try Magic first. Otherwise, pick a cipher.</p>
       </header>
       <div class="overview" data-overview="decode"></div>
     </section>
@@ -114,7 +113,6 @@
     <section id="page-encode" class="page container" hidden>
       <header class="page-heading">
         <h1 class="page-title">Encode</h1>
-        <p class="section-intro">Pick a cipher to hide your message with.</p>
       </header>
       <div class="overview" data-overview="encode"></div>
     </section>
@@ -126,15 +124,14 @@
       <section class="lore-content-section narrow">
         <p id="cipher-kicker" class="kicker">Decode</p>
         <h1 id="cipher-title">Decode</h1>
-        <blockquote id="cipher-description" hidden></blockquote>
         <form id="cipher-form">
           <div id="cipher-options-section" hidden>
-            <div id="cipher-options-label" class="faction-group-label">Options</div>
+            <div id="cipher-options-label" class="section-label">Options</div>
             <div id="cipher-options" class="options"></div>
           </div>
 
           <div id="cipher-text-field" class="text-field">
-            <div class="faction-group-label"><label id="cipher-text-label" for="cipher-text">Input</label></div>
+            <div class="section-label"><label id="cipher-text-label" for="cipher-text">Input</label></div>
             <textarea id="cipher-text" rows="5" spellcheck="false" required></textarea>
           </div>
 
@@ -143,11 +140,11 @@
           </div>
         </form>
         <div id="cipher-output" hidden>
-          <div class="faction-group-label">Output</div>
+          <div class="section-label">Output</div>
           <div id="cipher-result" class="result" role="status" aria-live="polite"></div>
         </div>
         <details id="cipher-chart-section" class="cipher-group chart-toggle" hidden>
-          <summary class="faction-group-label">Alphabet</summary>
+          <summary class="section-label">Alphabet</summary>
           <div id="cipher-chart" class="glyph-chart"></div>
         </details>
       </section>

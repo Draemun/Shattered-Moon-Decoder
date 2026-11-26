@@ -42,7 +42,11 @@
     }
   }
 
-  toggle.addEventListener("click", () => setOpen(!isOpen()));
+  toggle.addEventListener("click", () => {
+    const opening = !isOpen();
+    if (opening && globalThis.SearchUI) SearchUI.close();
+    setOpen(opening);
+  });
   backdrop.addEventListener("click", () => setOpen(false));
 
   sidebar.querySelectorAll(".submenu-toggle").forEach((button) => {
